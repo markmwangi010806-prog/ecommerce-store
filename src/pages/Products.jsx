@@ -5,31 +5,22 @@ import {
   AlertCircle,
   Search,
   ArrowUpDown,
+  RotateCcw,
 } from "lucide-react";
 
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 
 function Products() {
-  // Store products retrieved from the API
   const [products, setProducts] = useState([]);
-
-  // Track loading state
   const [loading, setLoading] = useState(true);
-
-  // Store API errors
   const [error, setError] = useState("");
 
-  // Search input
   const [searchTerm, setSearchTerm] = useState("");
-
-  // Selected category
   const [selectedCategory, setSelectedCategory] = useState("all");
-
-  // Selected sorting option
   const [sortOption, setSortOption] = useState("default");
 
-  // Fetch products when component mounts
+  // Fetch products from the API
   useEffect(() => {
     async function fetchProducts() {
       try {
@@ -45,7 +36,6 @@ function Products() {
         }
 
         const data = await response.json();
-
         setProducts(data);
       } catch (err) {
         setError(err.message);
@@ -57,13 +47,26 @@ function Products() {
     fetchProducts();
   }, []);
 
-  // Get unique product categories
+  // Get unique categories
   const categories = [
     "all",
     ...new Set(products.map((product) => product.category)),
   ];
 
-  // Filter products using search and category
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setSortOption("default");
+  };
+
+  // Check whether any filter or sorting option is active
+  const hasActiveFilters =
+    searchTerm !== "" ||
+    selectedCategory !== "all" ||
+    sortOption !== "default";
+
+  // Filter products
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.title
       .toLowerCase()
@@ -77,26 +80,24 @@ function Products() {
   });
 
   // Sort filtered products
-  const sortedProducts = [...filteredProducts].sort(
-    (a, b) => {
-      switch (sortOption) {
-        case "price-low":
-          return a.price - b.price;
+  const sortedProducts = [...filteredProducts].sort((a, b) => {
+    switch (sortOption) {
+      case "price-low":
+        return a.price - b.price;
 
-        case "price-high":
-          return b.price - a.price;
+      case "price-high":
+        return b.price - a.price;
 
-        case "rating":
-          return (b.rating?.rate ?? 0) - (a.rating?.rate ?? 0);
+      case "rating":
+        return (b.rating?.rate ?? 0) - (a.rating?.rate ?? 0);
 
-        case "name":
-          return a.title.localeCompare(b.title);
+      case "name":
+        return a.title.localeCompare(b.title);
 
-        default:
-          return 0;
-      }
+      default:
+        return 0;
     }
-  );
+  });
 
   // Loading state
   if (loading) {
@@ -129,7 +130,6 @@ function Products() {
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
-
       {/* Page Heading */}
       <div className="mb-10">
         <p className="text-blue-600 font-semibold uppercase text-sm">
@@ -146,8 +146,7 @@ function Products() {
       </div>
 
       {/* Search, Category and Sorting Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         {/* Search Input */}
         <div className="relative">
           <Search
@@ -172,9 +171,7 @@ function Products() {
         >
           {categories.map((category) => (
             <option key={category} value={category}>
-              {category === "all"
-                ? "All Categories"
-                : category}
+              {category === "all" ? "All Categories" : category}
             </option>
           ))}
         </select>
@@ -200,6 +197,19 @@ function Products() {
         </div>
       </div>
 
+      {/* Clear Filters Button */}
+      <div className="flex justify-end mb-6">
+        <Button
+          variant="outline"
+          onClick={clearFilters}
+          disabled={!hasActiveFilters}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw size={16} />
+          Clear Filters
+        </Button>
+      </div>
+
       {/* Results Count */}
       <p className="text-sm text-gray-500 mb-6">
         Showing {sortedProducts.length} of {products.length} products
@@ -220,7 +230,6 @@ function Products() {
           </p>
         )}
       </div>
-
     </div>
   );
 }
