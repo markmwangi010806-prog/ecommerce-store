@@ -16,7 +16,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 function Checkout() {
-  const { cartItems, cartTotal } = useStore();
+  const { cartItems, cartTotal, clearCart } = useStore();
 
   // Store customer information
   const [formData, setFormData] = useState({
@@ -61,7 +61,9 @@ function Checkout() {
 
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    } else if (
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)
+    ) {
       newErrors.email = "Enter a valid email address";
     }
 
@@ -92,7 +94,12 @@ function Checkout() {
     }
 
     if (validateForm()) {
+      // Clear the cart after successful validation
+      clearCart();
+
+      // Show order confirmation
       setOrderPlaced(true);
+
       toast.success("Your order has been placed successfully!");
     } else {
       toast.error("Please complete all required fields correctly.");

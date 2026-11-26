@@ -76,6 +76,11 @@ export function StoreProvider({ children }) {
     );
   }
 
+  // Clear all cart items after successful checkout
+  function clearCart() {
+    setCartItems([]);
+  }
+
   // Update product quantity
   function updateQuantity(productId, quantity) {
     if (quantity < 1) return;
@@ -151,6 +156,7 @@ export function StoreProvider({ children }) {
     addToCart,
     removeFromCart,
     updateQuantity,
+    clearCart,
     toggleWishlist,
     login,
     logout,
