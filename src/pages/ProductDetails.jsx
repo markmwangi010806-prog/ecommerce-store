@@ -12,6 +12,7 @@ import {
 import { toast } from "sonner";
 
 import { useStore } from "@/context/useStore";
+import ProductCard from "@/components/ProductCard";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,10 +27,14 @@ function ProductDetails() {
   // Access the shared cart
   const { addToCart } = useStore();
 
+  // Product state
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [added, setAdded] = useState(false);
+
+  // Related products state
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   // Fetch the selected product
   useEffect(() => {
@@ -37,6 +42,8 @@ function ProductDetails() {
       try {
         setLoading(true);
         setError("");
+        setProduct(null);
+        setRelatedProducts([]);
 
         const response = await fetch(
           `https://fakestoreapi.com/products/${id}`
@@ -58,11 +65,51 @@ function ProductDetails() {
     fetchProduct();
   }, [id]);
 
+  // Fetch related products from the same category
+  useEffect(() => {
+    if (!product) return;
+
+    let isActive = true;
+
+    async function fetchRelatedProducts() {
+      try {
+        const response = await fetch(
+          "https://fakestoreapi.com/products"
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch related products");
+        }
+
+        const data = await response.json();
+
+        const related = data
+          .filter(
+            (item) =>
+              item.category === product.category &&
+              item.id !== product.id
+          )
+          .slice(0, 4);
+
+        if (isActive) {
+          setRelatedProducts(related);
+        }
+      } catch (err) {
+        console.error("Related products error:", err);
+      }
+    }
+
+    fetchRelatedProducts();
+
+    return () => {
+      isActive = false;
+    };
+  }, [product]);
+
   // Add product to cart
   function handleAddToCart() {
     addToCart(product);
 
-    // Show success notification
     toast.success(`${product.title} added to cart!`);
 
     setAdded(true);
@@ -77,7 +124,9 @@ function ProductDetails() {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
         <LoaderCircle className="h-10 w-10 animate-spin text-blue-600" />
-        <p className="text-gray-500">Loading product details...</p>
+        <p className="text-gray-500">
+          Loading product details...
+        </p>
       </div>
     );
   }
@@ -113,8 +162,10 @@ function ProductDetails() {
         Back to Products
       </Link>
 
+      {/* Main Product Details */}
       <Card className="overflow-hidden">
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-10 p-6 md:p-10">
+
           {/* Product Image */}
           <div className="bg-white rounded-xl flex items-center justify-center p-8 min-h-[350px]">
             <img
@@ -126,7 +177,10 @@ function ProductDetails() {
 
           {/* Product Information */}
           <div className="flex flex-col justify-center">
-            <Badge variant="secondary" className="w-fit mb-4 capitalize">
+            <Badge
+              variant="secondary"
+              className="w-fit mb-4 capitalize"
+            >
               {product.category}
             </Badge>
 
@@ -167,7 +221,7 @@ function ProductDetails() {
               </p>
             </div>
 
-            {/* Functional Add to Cart Button */}
+            {/* Add to Cart */}
             <Button
               size="lg"
               className="mt-8 w-full md:w-fit"
@@ -188,6 +242,34 @@ function ProductDetails() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <section className="mt-16">
+          <div className="mb-8">
+            <p className="text-sm font-semibold text-blue-600 uppercase tracking-wider">
+              You may also like
+            </p>
+
+            <h2 className="text-3xl font-bold text-gray-900 mt-2">
+              Related Products
+            </h2>
+
+            <p className="text-gray-500 mt-2">
+              Discover more products from the same category.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedProducts.map((relatedProduct) => (
+              <ProductCard
+                key={relatedProduct.id}
+                product={relatedProduct}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
