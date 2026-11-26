@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   LoaderCircle,
   AlertCircle,
@@ -21,31 +21,32 @@ function Products() {
   const [sortOption, setSortOption] = useState("default");
 
   // Fetch products from the API
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        setLoading(true);
-        setError("");
+  const fetchProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-        const response = await fetch(
-          "https://fakestoreapi.com/products"
-        );
+      const response = await fetch(
+        "https://fakestoreapi.com/products"
+      );
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch products");
-        }
-
-        const data = await response.json();
-        setProducts(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error("Failed to fetch products. Please try again.");
       }
-    }
 
-    fetchProducts();
+      const data = await response.json();
+      setProducts(data);
+    } catch (err) {
+      setError(err.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // Fetch products when the component mounts
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   // Get unique categories
   const categories = [
@@ -119,9 +120,15 @@ function Products() {
           Something went wrong
         </h2>
 
-        <p className="text-gray-500">{error}</p>
+        <p className="text-gray-500 text-center max-w-md">
+          {error}
+        </p>
 
-        <Button onClick={() => window.location.reload()}>
+        <Button
+          onClick={fetchProducts}
+          className="flex items-center gap-2"
+        >
+          <RotateCcw size={16} />
           Try Again
         </Button>
       </div>
