@@ -4,28 +4,32 @@ import {
   LoaderCircle,
   AlertCircle,
   Search,
+  ArrowUpDown,
 } from "lucide-react";
 
 import ProductCard from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 
 function Products() {
-  // Store the products retrieved from the API
+  // Store products retrieved from the API
   const [products, setProducts] = useState([]);
 
-  // Track whether products are loading
+  // Track loading state
   const [loading, setLoading] = useState(true);
 
   // Store API errors
   const [error, setError] = useState("");
 
-  // Store the search input
+  // Search input
   const [searchTerm, setSearchTerm] = useState("");
 
-  // Store the selected category
+  // Selected category
   const [selectedCategory, setSelectedCategory] = useState("all");
 
-  // Fetch products when the component mounts
+  // Selected sorting option
+  const [sortOption, setSortOption] = useState("default");
+
+  // Fetch products when component mounts
   useEffect(() => {
     async function fetchProducts() {
       try {
@@ -71,6 +75,28 @@ function Products() {
 
     return matchesSearch && matchesCategory;
   });
+
+  // Sort filtered products
+  const sortedProducts = [...filteredProducts].sort(
+    (a, b) => {
+      switch (sortOption) {
+        case "price-low":
+          return a.price - b.price;
+
+        case "price-high":
+          return b.price - a.price;
+
+        case "rating":
+          return (b.rating?.rate ?? 0) - (a.rating?.rate ?? 0);
+
+        case "name":
+          return a.title.localeCompare(b.title);
+
+        default:
+          return 0;
+      }
+    }
+  );
 
   // Loading state
   if (loading) {
@@ -119,11 +145,11 @@ function Products() {
         </p>
       </div>
 
-      {/* Search and Category Filters */}
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
+      {/* Search, Category and Sorting Filters */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
 
         {/* Search Input */}
-        <div className="relative flex-1">
+        <div className="relative">
           <Search
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
             size={20}
@@ -152,17 +178,37 @@ function Products() {
             </option>
           ))}
         </select>
+
+        {/* Sorting Dropdown */}
+        <div className="relative">
+          <ArrowUpDown
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={19}
+          />
+
+          <select
+            value={sortOption}
+            onChange={(e) => setSortOption(e.target.value)}
+            className="w-full border rounded-lg pl-10 pr-4 py-3 bg-white outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="default">Default Sorting</option>
+            <option value="price-low">Price: Low to High</option>
+            <option value="price-high">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+            <option value="name">Name: A to Z</option>
+          </select>
+        </div>
       </div>
 
       {/* Results Count */}
       <p className="text-sm text-gray-500 mb-6">
-        Showing {filteredProducts.length} of {products.length} products
+        Showing {sortedProducts.length} of {products.length} products
       </p>
 
       {/* Products Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {filteredProducts.length > 0 ? (
-          filteredProducts.map((product) => (
+        {sortedProducts.length > 0 ? (
+          sortedProducts.map((product) => (
             <ProductCard
               key={product.id}
               product={product}
